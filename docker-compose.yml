@@ -1,20 +1,18 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: mysql_spring
+  postgres:
+    image: postgres:16
+    container_name: postgres-spring
     restart: always
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: meubanco
-      MYSQL_USER: usuario
-      MYSQL_PASSWORD: senhauser
+      POSTGRES_DB: meubanco
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: senha
     volumes:
-      - mysql_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  mysql_data:
+  postgres_data:
