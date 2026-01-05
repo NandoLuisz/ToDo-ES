@@ -3,6 +3,7 @@ package org.example.todo.service;
 import org.example.todo.domain.*;
 import org.example.todo.repository.TaskRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -28,16 +29,9 @@ public class TaskService {
 
         eventPublisher.publish(
                 new TaskEventDto(
-                        "CREATED",
+                        TaskEventType.CREATED,
                         savedTask.getId(),
-                        new TaskCreatedDto(
-                                savedTask.getId(),
-                                savedTask.getTitle(),
-                                savedTask.getDescription(),
-                                savedTask.getPriority().toString(),
-                                savedTask.isCompleted(),
-                                savedTask.getCreatedAt()
-                        )
+                        TaskCreatedDto.from(savedTask)
                 )
         );
 
@@ -49,10 +43,14 @@ public class TaskService {
     }
 
     public void deleteTask(Long id) {
+        if (!taskRepository.existsById(id)) {
+            return;
+        }
+
         taskRepository.deleteById(id);
 
         eventPublisher.publish(
-                new TaskEventDto("DELETED", id,null)
+                new TaskEventDto(TaskEventType.DELETED, id, null)
         );
     }
 
@@ -65,20 +63,18 @@ public class TaskService {
 
         eventPublisher.publish(
                 new TaskEventDto(
-                        "UPDATED",
-                        null,
-                        new TaskCreatedDto(
-                                task.getId(),
-                                task.getTitle(),
-                                task.getDescription(),
-                                task.getPriority().toString(),
-                                task.isCompleted(),
-                                task.getCreatedAt()
-                        )
+                        TaskEventType.UPDATED,
+                        task.getId(),
+                        TaskCreatedDto.from(task)
                 )
         );
 
         return task;
     }
+
+    public Flux<TaskEventDto> streamEvents() {
+        return eventPublisher.getEvents();
+    }
+
 
 }

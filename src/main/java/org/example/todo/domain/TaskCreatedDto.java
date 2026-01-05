@@ -10,4 +10,15 @@ public record TaskCreatedDto(
         boolean isCompleted,
         LocalDateTime createdAt
 ) {
+    public static TaskCreatedDto from(Task task) {
+        return new TaskCreatedDto(
+                task.getId(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getPriority().name(),
+                task.isCompleted(),
+                task.getCreatedAt()
+        );
+    }
 }
+

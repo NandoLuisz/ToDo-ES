@@ -6,20 +6,27 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 
+import java.time.Duration;
+
 @Component
 public class TaskEventPublisher {
 
-    private final Sinks.Many<TaskEventDto> sink;
-
-    public TaskEventPublisher() {
-        this.sink = Sinks.many().multicast().onBackpressureBuffer();
-    }
+    private final Sinks.Many<TaskEventDto> sink =
+            Sinks.many().replay().latest();
 
     public void publish(TaskEventDto event) {
-        sink.tryEmitNext(event);
+        Sinks.EmitResult result = sink.tryEmitNext(event);
+        if (result.isFailure()) {
+            System.err.println("SSE emit failed: " + result);
+        }
     }
 
     public Flux<TaskEventDto> getEvents() {
-        return sink.asFlux();
+        return sink.asFlux()
+                .mergeWith(
+                        Flux.interval(Duration.ofSeconds(15))
+                                .map(i -> TaskEventDto.heartbeat())
+                );
     }
 }
+
